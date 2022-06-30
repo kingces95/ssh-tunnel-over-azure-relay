@@ -41,7 +41,7 @@ if [[ ! "${AZURE_DEFAULTS_SUBSCRIPTION}" ]]; then
 fi
 
 # login
-if ! (az account show >/dev/null); then
+if ! (az account show >/dev/null 2>/dev/null); then
     az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}"
 fi
 
