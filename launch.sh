@@ -45,6 +45,10 @@ if ! (az account show >/dev/null 2>/dev/null); then
     az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}" >/dev/null
 fi
 
+# set default Azure account
+az account set \
+    --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
+
 # activate azure resource; get relay connection string
 CONNECTION_STRING=$(
     az relay namespace authorization-rule keys list \
@@ -56,9 +60,6 @@ CONNECTION_STRING=$(
 )
 
 if [[ ! "${CONNECTION_STRING}" ]]; then
-    az account set \
-        --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
-
     az group create \
         --name "${AZURE_DEFAULTS_GROUP}"
 
