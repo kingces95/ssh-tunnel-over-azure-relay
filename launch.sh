@@ -6,7 +6,6 @@ touch .secrets
 if [[ "${CONNECTION}" == 'ssh' ]]; then
     echo "Connecting over ssh... (password is asdf1234)"
 
-    echo "codespace:asdf1234" | sudo chpasswd
     ssh \
         -p 2223 \
         -o StrictHostKeyChecking=no \
@@ -124,6 +123,7 @@ if [[ "${CONNECTION}" == 'client' ]]; then
 else
     echo 'Starting ssh server ...'
     /usr/local/share/ssh-init.sh
+    echo "codespace:asdf1234" | sudo chpasswd
 
     echo "Starting azbridge server..."    
     
