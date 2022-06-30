@@ -1,5 +1,8 @@
 CONNECTION="$1"
 
+# scratch location for secrets
+touch .secrets
+
 if [[ "${CONNECTION}" == 'ssh' ]]; then
     echo "Connecting over ssh... (password is asdf1234)"
 
@@ -29,9 +32,6 @@ export AZURE_DISABLE_CONFIRM_PROMPT=yes
 export AZURE_DEFAULTS_GROUP="${PREFIX}-rg"
 export AZURE_DEFAULTS_LOCATION="westus"
 
-# scratch location for secrets
-touch .secrets
-
 # tenant/subscription
 if [[ ! "${AZURE_DEFAULTS_TENANT}" ]]; then
     read -p 'Tenant id: ' AZURE_DEFAULTS_TENANT
@@ -42,7 +42,7 @@ fi
 
 # login
 if ! (az account show >/dev/null 2>/dev/null); then
-    az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}"
+    az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}" >/dev/null
 fi
 
 # activate azure resource; get relay connection string
