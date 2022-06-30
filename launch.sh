@@ -79,6 +79,19 @@ if [[ ! "${CONNECTION_STRING}" ]]; then
     )
 fi
 
+URL=(
+    'https://ms.portal.azure.com/'
+    '#@microsoft.onmicrosoft.com/resource'
+    "/subscriptions/${AZURE_DEFAULTS_SUBSCRIPTION}"
+    "/resourceGroups/${AZURE_DEFAULTS_GROUP}"
+    "/providers/Microsoft.Relay/namespaces/${RELAY_NAMESPACE}/hybridConnections"
+    "/${RELAY_NAME}/overview"
+)
+(
+    IFS=
+    echo "Relay: ${URL[*]}"
+)
+
 # install azbridge
 if [[ ! -d ~/azure-relay-bridge-binaries ]]; then
     git clone https://github.com/kingces95/azure-relay-bridge-binaries ~/azure-relay-bridge-binaries
@@ -111,7 +124,7 @@ else
     echo 'Starting ssh server ...'
     /usr/local/share/ssh-init.sh
 
-    echo 'Starting azbridge server...'
+    echo "Starting azbridge server..."    
     
     # test -> localhost -> 2222 -> ssh
     # ssh:localhost:2223/2222
