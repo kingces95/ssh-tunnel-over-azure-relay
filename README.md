@@ -1,5 +1,5 @@
 # ssh-tunnel-over-azure-relay
-Issue an `az` https request via a proxy over an Azure Relay.
+Issue an `az` https request behind a firewall using Azure Relay.
 
 # Server codespace
 Open a codespace for this repo and launch a bash shell. 
