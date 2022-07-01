@@ -1,4 +1,4 @@
-alias vpt-reload=". \$REPO_DIR/launch.sh"
+alias vpt-reload=". \$REPO_DIR/env.sh"
 alias vpt-install='vpt::install'
 alias vpt-azure-login='vpt::azure::login'
 alias vpt-azure-relay-create='vpt::azure::relay::create'
@@ -161,7 +161,7 @@ vpt::azure::relay::create() {
 }
 
 vpt::azure::relay::connection_string() {
-    vpt::azure::relay::create >/dev/null 2>&1
+    vpt::azure::relay::create >/dev/null
 
     az relay namespace authorization-rule keys list \
         --name 'RootManageSharedAccessKey' \
