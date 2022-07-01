@@ -1,4 +1,10 @@
-CONNECTION="$1"
+alias vpt-reload=". $(cd "$(dirname ${BASH_SOURCE})"; pwd)/launch.sh"
+alias vpt-install='vpt::install'
+alias vpt-azure-login='vpt::azure::login'
+alias vpt-azure-relay-create='vpt::azure::relay::create'
+alias vpt-azure-relay-delete='vpt::azure::relay::delete'
+
+alias re='vpt-reload'
 
 # scratch location for secrets
 touch .secrets
@@ -38,11 +44,6 @@ export AZURE_DEFAULTS_LOCATION="westus"
 
 vpt::install() {
 
-    # install az command line tool
-    if ! (which az >/dev/null); then
-        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-    fi
-
     # tenant
     if [[ ! "${AZURE_DEFAULTS_TENANT}" ]]; then
         read -p 'Tenant id: ' AZURE_DEFAULTS_TENANT
@@ -51,9 +52,11 @@ vpt::install() {
     # subscription
     if [[ ! "${AZURE_DEFAULTS_SUBSCRIPTION}" ]]; then
         read -p 'Subscription id: ' AZURE_DEFAULTS_SUBSCRIPTION
+    fi
 
-        az account set \
-            --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
+    # install az command line tool
+    if ! (which az >/dev/null); then
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
     fi
         
     # download azbridge
@@ -67,12 +70,25 @@ vpt::install() {
     fi
 }
 
-vpt::azure::relay::create() {
-
+vpt::azure::login() {
     # login
     if ! (az account show >/dev/null 2>/dev/null); then
         az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}" >/dev/null
+
+        az account set \
+            --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
     fi
+}
+
+vpt::azure::relay::delete() {
+    vpt::azure::login
+
+    az group delete \
+        --name "${AZURE_DEFAULTS_GROUP}"
+}
+
+vpt::azure::relay::create() {
+    vpt::azure::login
 
     # activate azure resource; get relay connection string
     RELAY_CONNECTION_STRING=$(
