@@ -5,12 +5,15 @@ alias vpt-azure-relay-create='vpt::azure::relay::create'
 alias vpt-azure-relay-delete='vpt::azure::relay::delete'
 alias vpt-azure-relay-connection-string='vpt::azure::relay::connection_string'
 alias vpt-azure-relay-www='vpt::azure::relay::www'
-alias vpt-ssh-server-start='vpt::ssh::server::start'
-alias vpt-ssh-server-connect='vpt::ssh::server::connect'
+alias vpt-myip='vpt::myip'
+alias vpt-ssh-start='vpt::ssh::start'
+alias vpt-proxy-start='vpt::proxy::start'
+alias vpt-ssh-connect='vpt::ssh::connect'
 alias vpt-azure-relay-remote-start='vpt::azure::relay::remote::start'
 alias vpt-azure-relay-local-start='vpt::azure::relay::local::start'
 alias vpt-azure-relay-connect='vpt::azure::relay::connect'
-alias vpt-socks5-start='vpt::socks5::start'
+alias vpt-azure-relay-proxy-start='vpt::azure::relay::proxy::start'
+alias vpt-proxy-curl='vpt::proxy::curl'
 
 alias re='vpt-reload'
 
@@ -46,7 +49,7 @@ RELAY_REMOTE_IP=localhost
 RELAY_REMOTE_PORT="${SSH_PORT}"
 
 # service <- relay remote <- relay local
-RELAY_LOCAL_IP=127.1.2.4
+RELAY_LOCAL_IP=localhost
 RELAY_LOCAL_PORT=$(( SSH_PORT + 1 )) # 2223
 
 # service <- relay remote <- relay local <- socks5 proxy
@@ -174,12 +177,21 @@ vpt::azure::relay::www() {
     )
 }
 
-vpt::ssh::server::start() {
+vpt::ssh::start() {
     /usr/local/share/ssh-init.sh
     echo "${USER}:${PASSWORD}" | sudo chpasswd
 }
 
-vpt::ssh::server::connect() {
+vpt::proxy::start() {
+    ssh \
+        -D "${SOCKS5_PORT}" \
+        -p "${SSH_PORT}" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        "${USER}@localhost"
+}
+
+vpt::ssh::connect() {
     ssh \
         -p "${SSH_PORT}" \
         -o StrictHostKeyChecking=no \
@@ -188,8 +200,8 @@ vpt::ssh::server::connect() {
 }
 
 vpt::azure::relay::remote::start() {
-    vpt::ssh::server::start
-    
+    vpt::ssh::start
+
     local RELAY_CONNECTION_STRING=$(vpt::azure::relay::connection_string)
     azbridge \
         -R "${RELAY_NAME}:${RELAY_REMOTE_IP}:${RELAY_LOCAL_PORT}/${RELAY_REMOTE_PORT}" \
@@ -205,25 +217,31 @@ vpt::azure::relay::local::start() {
 
 vpt::azure::relay::connect() {
     ssh \
-        -p "${SSH_PORT}" \
+        -p "${RELAY_LOCAL_PORT}" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         "${USER}@localhost"
 }
 
-vpt::socks5::start() {
+vpt::azure::relay::proxy::start() {
     ssh \
         -D "${SOCKS5_PORT}" \
-        -p "${SSH_PORT}" \
+        -p "${RELAY_LOCAL_PORT}" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         "${USER}@localhost"
 }
 
-vpt::socks5() {
+vpt::proxy::curl() {
     curl \
         -x "socks5h://localhost:${SOCKS5_PORT}" \
-        "${1-'https://api.ipify.org'}"
+        "${1-https://api.ipify.org}"
+    echo
+}
+
+vpt::myip() {
+    curl https://api.ipify.org
+    echo
 }
 
 vpt::azure::proxy::export() {
