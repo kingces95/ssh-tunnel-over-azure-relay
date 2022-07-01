@@ -141,7 +141,7 @@ vpt::azure::relay::test() {
     vpt::azure::relay::show >/dev/null 2>&1
 }
 
-vpt::azure::relay::create() (
+vpt::azure::relay::create() {
     vpt::azure::login
 
     if vpt::azure::relay::test; then
@@ -158,7 +158,7 @@ vpt::azure::relay::create() (
         --name "${RELAY_NAME}" \
         --namespace-name "${RELAY_NAMESPACE}" \
         --requires-client-authorization true
-)
+}
 
 vpt::azure::relay::connection_string() {
     vpt::azure::relay::create
