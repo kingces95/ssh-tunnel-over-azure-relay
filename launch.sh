@@ -66,10 +66,10 @@ vpt::keys::install() {
     if [[ ! -f "{SSH_PRIVATE_KEY}" ]]; then
     
         #  assign everyone the same private key
-        cp "${REPO_SSH_PRIVATE_KEY}" "${SSH_PRIVATE_KEY}"
+        install -m u=rw,go= "${REPO_SSH_PRIVATE_KEY}" "${SSH_PRIVATE_KEY}"
         
         # grant access to anyone with the private key
-        sudo cat "${REPO_SSH_PUBLIC_KEY}" >> "${SSH_AUTHORIZED_KEYS}"
+        cat "${REPO_SSH_PUBLIC_KEY}" >> "${SSH_AUTHORIZED_KEYS}"
     fi
 }
 
