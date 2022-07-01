@@ -3,6 +3,14 @@ alias vpt-install='vpt::install'
 alias vpt-azure-login='vpt::azure::login'
 alias vpt-azure-relay-create='vpt::azure::relay::create'
 alias vpt-azure-relay-delete='vpt::azure::relay::delete'
+alias vpt-azure-relay-connection-string='vpt::azure::relay::connection_string'
+alias vpt-azure-relay-www='vpt::azure::relay::www'
+alias vpt-ssh-server-start='vpt::ssh::server::start'
+alias vpt-ssh-server-connect='vpt::ssh::server::connect'
+alias vpt-azure-relay-remote-start='vpt::azure::relay::remote::start'
+alias vpt-azure-relay-local-start='vpt::azure::relay::local::start'
+alias vpt-azure-relay-connect='vpt::azure::relay::connect'
+alias vpt-socks5-start='vpt::socks5::start'
 
 alias re='vpt-reload'
 
@@ -71,8 +79,10 @@ vpt::install() {
 }
 
 vpt::azure::login() {
+    vpt::install
+
     # login
-    if ! (az account show >/dev/null 2>/dev/null); then
+    if ! az account show >/dev/null 2>/dev/null; then
         az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}" >/dev/null
 
         az account set \
@@ -87,41 +97,49 @@ vpt::azure::relay::delete() {
         --name "${AZURE_DEFAULTS_GROUP}"
 }
 
+vpt::azure::relay::show() {
+    az relay hyco show \
+        --name "${RELAY_NAME}" \
+        --namespace-name "${RELAY_NAMESPACE}"
+}
+
+vpt::azure::relay::test() {
+    vpt::azure::relay::show >/dev/null 2>&1
+}
+
 vpt::azure::relay::create() {
     vpt::azure::login
 
-    # activate azure resource; get relay connection string
-    RELAY_CONNECTION_STRING=$(
-        az relay namespace authorization-rule keys list \
-            --name 'RootManageSharedAccessKey' \
-            --namespace-name "${RELAY_NAMESPACE}" \
-            --query primaryConnectionString \
-            --output tsv \
-            2>/dev/null
-    )
-
-    if [[ ! "${RELAY_CONNECTION_STRING}" ]]; then
-        az group create \
-            --name "${AZURE_DEFAULTS_GROUP}"
-
-        az relay namespace create \
-            --name "${RELAY_NAMESPACE}"
-
-        az relay hyco create \
-            --name "${RELAY_NAME}" \
-            --namespace-name "${RELAY_NAMESPACE}" \
-            --requires-client-authorization true
-
-        RELAY_CONNECTION_STRING=$(
-            az relay namespace authorization-rule keys list \
-                --name 'RootManageSharedAccessKey' \
-                --namespace-name "${RELAY_NAMESPACE}" \
-                --query primaryConnectionString \
-                --output tsv
-        )
+    if vpt::azure::relay::test; then
+        return
     fi
 
-    URL=(
+    az group create \
+        --name "${AZURE_DEFAULTS_GROUP}"
+
+    az relay namespace create \
+        --name "${RELAY_NAMESPACE}"
+
+    az relay hyco create \
+        --name "${RELAY_NAME}" \
+        --namespace-name "${RELAY_NAMESPACE}" \
+        --requires-client-authorization true
+}
+
+vpt::azure::relay::connection_string() {
+    vpt::azure::relay::create
+
+    az relay namespace authorization-rule keys list \
+        --name 'RootManageSharedAccessKey' \
+        --namespace-name "${RELAY_NAMESPACE}" \
+        --query primaryConnectionString \
+        --output tsv
+}
+
+vpt::azure::relay::www() {
+    vpt::azure::relay::create
+
+    local URL=(
         'https://ms.portal.azure.com/'
         '#@microsoft.onmicrosoft.com/resource'
         "/subscriptions/${AZURE_DEFAULTS_SUBSCRIPTION}"
@@ -131,7 +149,7 @@ vpt::azure::relay::create() {
     )
     (
         IFS=
-        echo "Relay: ${URL[*]}"
+        echo "${URL[*]}"
     )
 }
 
@@ -149,12 +167,16 @@ vpt::ssh::server::connect() {
 }
 
 vpt::azure::relay::remote::start() {
+    vpt::ssh::server::start
+    
+    local RELAY_CONNECTION_STRING=$(vpt::azure::relay::connection_string)
     azbridge \
         -R "${RELAY_NAME}:${RELAY_REMOTE_IP}:${RELAY_LOCAL_PORT}/${RELAY_REMOTE_PORT}" \
         -x "${RELAY_CONNECTION_STRING}"
 }
 
 vpt::azure::relay::local::start() {
+    local RELAY_CONNECTION_STRING=$(vpt::azure::relay::connection_string)
     azbridge \
         -L "${RELAY_LOCAL_IP}:${RELAY_LOCAL_PORT}:${RELAY_NAME}" \
         -x "${RELAY_CONNECTION_STRING}"
@@ -168,7 +190,7 @@ vpt::azure::relay::connect() {
         "${USER}@localhost"
 }
 
-vpt::ssh::socks5::start() {
+vpt::socks5::start() {
     ssh \
         -D "${SOCKS5_PORT}" \
         -p "${SSH_PORT}" \
@@ -186,11 +208,4 @@ vpt::socks5() {
 vpt::azure::proxy::export() {
     # https://docs.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-configure-proxy?tabs=bash
     export HTTPS_PROXY="http://${USER}:${PASSWORD}@localhost:${SOCKS5_PORT}  "      
-}
-
-vpt::azure::login() {
-    az login \
-        --use-device-code \
-        --tenant "${AZURE_DEFAULTS_TENANT}" \
-        >/dev/null
 }
