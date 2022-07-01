@@ -1,4 +1,4 @@
-# ssh-tunnel-over-azure-relay
+# Virtual Private Tunnel
 Issue an `az` https request behind a firewall using Azure Relay.
 
 # Server codespace
