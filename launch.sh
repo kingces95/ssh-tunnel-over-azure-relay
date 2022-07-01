@@ -3,133 +3,178 @@ CONNECTION="$1"
 # scratch location for secrets
 touch .secrets
 
-if [[ "${CONNECTION}" == 'ssh' ]]; then
-    echo "Connecting over ssh... (password is asdf1234)"
-
-    ssh \
-        -p 2223 \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
-        codespace@127.1.2.4
-    return
-fi
-
-# install az command line tool
-if ! (which az >/dev/null); then
-    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-fi
-
 # constants
+PASSWORD=asdf1234
 MONKIER=vpb
 PREFIX="${GITHUB_USER}-${MONKIER}"
+
+# relay
 RELAY_NAMESPACE="${PREFIX}-relay"
 RELAY_NAME='bridge'
-CONNECTION_STRING=
+RELAY_CONNECTION_STRING=
+
+# service
+SSH_PORT=$( # 2222
+    cat /etc/ssh/sshd_config \
+        | egrep ^Port \
+        | egrep -o '[0-9]*'
+)
+
+# service <- relay remote
+RELAY_REMOTE_IP=localhost
+RELAY_REMOTE_PORT="${SSH_PORT}"
+
+# service <- relay remote <- relay local
+RELAY_LOCAL_IP=127.1.2.4
+RELAY_LOCAL_PORT=$(( SSH_PORT + 1 )) # 2223
+
+# service <- relay remote <- relay local <- socks5 proxy
+SOCKS5_PORT=$(( RELAY_LOCAL_PORT + 1 )) # 2224
 
 # default Azure variables
 export AZURE_DISABLE_CONFIRM_PROMPT=yes
 export AZURE_DEFAULTS_GROUP="${PREFIX}-rg"
 export AZURE_DEFAULTS_LOCATION="westus"
 
-# tenant/subscription
-if [[ ! "${AZURE_DEFAULTS_TENANT}" ]]; then
-    read -p 'Tenant id: ' AZURE_DEFAULTS_TENANT
-fi
-if [[ ! "${AZURE_DEFAULTS_SUBSCRIPTION}" ]]; then
-    read -p 'Subscription id: ' AZURE_DEFAULTS_SUBSCRIPTION
-fi
+vpt::install() {
 
-# login
-if ! (az account show >/dev/null 2>/dev/null); then
-    az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}" >/dev/null
-fi
+    # install az command line tool
+    if ! (which az >/dev/null); then
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    fi
 
-# set default Azure account
-az account set \
-    --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
+    # tenant
+    if [[ ! "${AZURE_DEFAULTS_TENANT}" ]]; then
+        read -p 'Tenant id: ' AZURE_DEFAULTS_TENANT
+    fi
 
-# activate azure resource; get relay connection string
-CONNECTION_STRING=$(
-    az relay namespace authorization-rule keys list \
-        --name 'RootManageSharedAccessKey' \
-        --namespace-name "${RELAY_NAMESPACE}" \
-        --query primaryConnectionString \
-        --output tsv \
-        2>/dev/null
-)
+    # subscription
+    if [[ ! "${AZURE_DEFAULTS_SUBSCRIPTION}" ]]; then
+        read -p 'Subscription id: ' AZURE_DEFAULTS_SUBSCRIPTION
 
-if [[ ! "${CONNECTION_STRING}" ]]; then
-    az group create \
-        --name "${AZURE_DEFAULTS_GROUP}"
+        az account set \
+            --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
+    fi
+        
+    # download azbridge
+    if [[ ! -d ~/azure-relay-bridge-binaries ]]; then
+        git clone https://github.com/kingces95/azure-relay-bridge-binaries ~/azure-relay-bridge-binaries
+    fi
 
-    az relay namespace create \
-        --name "${RELAY_NAMESPACE}"
+    # install azbridge
+    if ! (azbridge >/dev/null); then
+        sudo apt install ~/azure-relay-bridge-binaries/azbridge.0.3.0-rtm.ubuntu.20.04-x64.deb
+    fi
+}
 
-    az relay hyco create \
-        --name "${RELAY_NAME}" \
-        --namespace-name "${RELAY_NAMESPACE}" \
-        --requires-client-authorization true
+vpt::azure::relay::create() {
 
-    CONNECTION_STRING=$(
+    # login
+    if ! (az account show >/dev/null 2>/dev/null); then
+        az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}" >/dev/null
+    fi
+
+    # activate azure resource; get relay connection string
+    RELAY_CONNECTION_STRING=$(
         az relay namespace authorization-rule keys list \
             --name 'RootManageSharedAccessKey' \
             --namespace-name "${RELAY_NAMESPACE}" \
             --query primaryConnectionString \
-            --output tsv
+            --output tsv \
+            2>/dev/null
     )
-fi
 
-URL=(
-    'https://ms.portal.azure.com/'
-    '#@microsoft.onmicrosoft.com/resource'
-    "/subscriptions/${AZURE_DEFAULTS_SUBSCRIPTION}"
-    "/resourceGroups/${AZURE_DEFAULTS_GROUP}"
-    "/providers/Microsoft.Relay/namespaces/${RELAY_NAMESPACE}/hybridConnections"
-    "/${RELAY_NAME}/overview"
-)
-(
-    IFS=
-    echo "Relay: ${URL[*]}"
-)
+    if [[ ! "${RELAY_CONNECTION_STRING}" ]]; then
+        az group create \
+            --name "${AZURE_DEFAULTS_GROUP}"
 
-# install azbridge
-if [[ ! -d ~/azure-relay-bridge-binaries ]]; then
-    git clone https://github.com/kingces95/azure-relay-bridge-binaries ~/azure-relay-bridge-binaries
-fi
-if ! (azbridge >/dev/null); then
-    sudo apt install ~/azure-relay-bridge-binaries/azbridge.0.3.0-rtm.ubuntu.20.04-x64.deb
-fi
+        az relay namespace create \
+            --name "${RELAY_NAMESPACE}"
 
-# relay local
-RELAY_LOCAL_IP=127.1.2.4
-RELAY_LOCAL_PORT=2223
+        az relay hyco create \
+            --name "${RELAY_NAME}" \
+            --namespace-name "${RELAY_NAMESPACE}" \
+            --requires-client-authorization true
 
-# relay remote
-RELAY_REMOTE_IP=localhost
-RELAY_REMOTE_PORT=$( # 2222
-    cat /etc/ssh/sshd_config \
-        | egrep ^Port \
-        | egrep -o '[0-9]*'
-)
+        RELAY_CONNECTION_STRING=$(
+            az relay namespace authorization-rule keys list \
+                --name 'RootManageSharedAccessKey' \
+                --namespace-name "${RELAY_NAMESPACE}" \
+                --query primaryConnectionString \
+                --output tsv
+        )
+    fi
 
-if [[ "${CONNECTION}" == 'client' ]]; then
-    echo 'Starting azbridge client...'
-    
-    # user -> 127.0.0.4:2223 -> test
-    azbridge \
-        -L "${RELAY_LOCAL_IP}:${RELAY_LOCAL_PORT}:${RELAY_NAME}" \
-        -x "${CONNECTION_STRING}"
-        
-else
-    echo 'Starting ssh server ...'
+    URL=(
+        'https://ms.portal.azure.com/'
+        '#@microsoft.onmicrosoft.com/resource'
+        "/subscriptions/${AZURE_DEFAULTS_SUBSCRIPTION}"
+        "/resourceGroups/${AZURE_DEFAULTS_GROUP}"
+        "/providers/Microsoft.Relay/namespaces/${RELAY_NAMESPACE}/hybridConnections"
+        "/${RELAY_NAME}/overview"
+    )
+    (
+        IFS=
+        echo "Relay: ${URL[*]}"
+    )
+}
+
+vpt::ssh::server::start() {
     /usr/local/share/ssh-init.sh
-    echo "codespace:asdf1234" | sudo chpasswd
+    echo "${USER}:${PASSWORD}" | sudo chpasswd
+}
 
-    echo "Starting azbridge server..."    
-    
-    # test -> localhost -> 2222 -> ssh
-    # ssh:localhost:2223/2222
+vpt::ssh::server::connect() {
+    ssh \
+        -p "${SSH_PORT}" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        "${USER}@localhost"
+}
+
+vpt::azure::relay::remote::start() {
     azbridge \
         -R "${RELAY_NAME}:${RELAY_REMOTE_IP}:${RELAY_LOCAL_PORT}/${RELAY_REMOTE_PORT}" \
-        -x "${CONNECTION_STRING}"
-fi
+        -x "${RELAY_CONNECTION_STRING}"
+}
+
+vpt::azure::relay::local::start() {
+    azbridge \
+        -L "${RELAY_LOCAL_IP}:${RELAY_LOCAL_PORT}:${RELAY_NAME}" \
+        -x "${RELAY_CONNECTION_STRING}"
+}
+
+vpt::azure::relay::connect() {
+    ssh \
+        -p "${SSH_PORT}" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        "${USER}@localhost"
+}
+
+vpt::ssh::socks5::start() {
+    ssh \
+        -D "${SOCKS5_PORT}" \
+        -p "${SSH_PORT}" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        "${USER}@localhost"
+}
+
+vpt::socks5() {
+    curl \
+        -x "socks5h://localhost:${SOCKS5_PORT}" \
+        "${1-'https://api.ipify.org'}"
+}
+
+vpt::azure::proxy::export() {
+    # https://docs.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-configure-proxy?tabs=bash
+    export HTTPS_PROXY="http://${USER}:${PASSWORD}@localhost:${SOCKS5_PORT}  "      
+}
+
+vpt::azure::login() {
+    az login \
+        --use-device-code \
+        --tenant "${AZURE_DEFAULTS_TENANT}" \
+        >/dev/null
+}
