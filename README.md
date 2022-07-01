@@ -2,7 +2,7 @@
 Issue an `az` https request via a proxy over an Azure Relay.
 
 # Server codespace
-Open a codespace for this repo and launch a bash shell.
+Open a codespace for this repo and launch a bash shell. 
 ```
 $ . launch.sh
 $ vpt-azure-relay-remote-start

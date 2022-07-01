@@ -161,7 +161,7 @@ vpt::azure::relay::create() {
 }
 
 vpt::azure::relay::connection_string() {
-    vpt::azure::relay::create
+    vpt::azure::relay::create >/dev/null 2>&1
 
     az relay namespace authorization-rule keys list \
         --name 'RootManageSharedAccessKey' \
