@@ -91,17 +91,24 @@ vpt::install() {
 
     # install az command line tool
     if ! (which az >/dev/null); then
-        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+        curl -sL https://aka.ms/InstallAzureCLIDeb \
+            | sudo bash \
+            >/dev/null
     fi
         
     # download azbridge
     if [[ ! -d ~/azure-relay-bridge-binaries ]]; then
-        git clone https://github.com/kingces95/azure-relay-bridge-binaries ~/azure-relay-bridge-binaries
+        git clone \
+            https://github.com/kingces95/azure-relay-bridge-binaries \
+            ~/azure-relay-bridge-binaries \
+            >/dev/null
     fi
 
     # install azbridge
     if ! (azbridge >/dev/null); then
-        sudo apt install ~/azure-relay-bridge-binaries/azbridge.0.3.0-rtm.ubuntu.20.04-x64.deb
+        sudo apt install \
+            ~/azure-relay-bridge-binaries/azbridge.0.3.0-rtm.ubuntu.20.04-x64.deb \
+            >/dev/null
     fi
 }
 
@@ -110,7 +117,10 @@ vpt::azure::login() {
 
     # login
     if ! az account show >/dev/null 2>/dev/null; then
-        az login --use-device-code --tenant "${AZURE_DEFAULTS_TENANT}" >/dev/null
+        az login \
+            --use-device-code \
+            --tenant "${AZURE_DEFAULTS_TENANT}" \
+            >/dev/null
 
         az account set \
             --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
@@ -182,7 +192,6 @@ vpt::azure::relay::www() {
 
 vpt::ssh::start() {
     /usr/local/share/ssh-init.sh
-    echo "${USER}:${PASSWORD}" | sudo chpasswd
 }
 
 vpt::proxy::start() {
