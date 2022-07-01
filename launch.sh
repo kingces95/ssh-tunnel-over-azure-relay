@@ -14,6 +14,9 @@ alias vpt-azure-relay-local-start='vpt::azure::relay::local::start'
 alias vpt-azure-relay-connect='vpt::azure::relay::connect'
 alias vpt-azure-relay-proxy-start='vpt::azure::relay::proxy::start'
 alias vpt-proxy-curl='vpt::proxy::curl'
+alias vpt-azure-proxy-enable='vpt::azure::proxy::enable'
+alias vpt-azure-proxy-disable='vpt::azure::proxy::disable'
+alias vpt-azure-group-show='vpt::azure::group::show'
 
 alias re='vpt-reload'
 
@@ -244,7 +247,16 @@ vpt::myip() {
     echo
 }
 
-vpt::azure::proxy::export() {
+vpt::azure::proxy::enable() {
     # https://docs.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-configure-proxy?tabs=bash
-    export HTTPS_PROXY="http://${USER}:${PASSWORD}@localhost:${SOCKS5_PORT}  "      
+    export HTTPS_PROXY="socks5h://${USER}:${PASSWORD}@localhost:${SOCKS5_PORT}"      
+}
+
+vpt::azure::proxy::disable() {
+    unset HTTPS_PROXY
+}
+
+vpt::azure::group::show() {
+    az group show \
+        --name "${AZURE_DEFAULTS_GROUP}"
 }
