@@ -1,19 +1,22 @@
-alias vpt-reload=". \$REPO_DIR/vpt.sh"
-alias vpt-install='vpt::install'
+alias vpt-reload=". \$VPT_REPO_DIR/vpt.sh"
+alias vpt-myip='vpt::myip'
+alias vpt-tool-azinstall='vpt::tool::az::install'
+alias vpt-tool-azbridge-install='vpt::tool::azbridge::install'
+alias vpt-ssh-keys-install='vpt::ssh::keys::install'
+alias vpt-ssh-start='vpt::ssh::start'
+alias vpt-ssh-stop='vpt::ssh::stop'
+alias vpt-ssh-connect='vpt::ssh::connect'
+alias vpt-proxy-start='vpt::proxy::start'
+alias vpt-proxy-curl='vpt::proxy::curl'
 alias vpt-azure-login='vpt::azure::login'
 alias vpt-azure-relay-create='vpt::azure::relay::create'
 alias vpt-azure-relay-delete='vpt::azure::relay::delete'
 alias vpt-azure-relay-connection-string='vpt::azure::relay::connection_string'
 alias vpt-azure-relay-www='vpt::azure::relay::www'
-alias vpt-myip='vpt::myip'
-alias vpt-ssh-start='vpt::ssh::start'
-alias vpt-proxy-start='vpt::proxy::start'
-alias vpt-ssh-connect='vpt::ssh::connect'
 alias vpt-azure-relay-remote-start='vpt::azure::relay::remote::start'
 alias vpt-azure-relay-local-start='vpt::azure::relay::local::start'
 alias vpt-azure-relay-connect='vpt::azure::relay::connect'
 alias vpt-azure-relay-proxy-start='vpt::azure::relay::proxy::start'
-alias vpt-proxy-curl='vpt::proxy::curl'
 alias vpt-azure-proxy-enable='vpt::azure::proxy::enable'
 alias vpt-azure-proxy-disable='vpt::azure::proxy::disable'
 alias vpt-azure-group-show='vpt::azure::group::show'
@@ -21,80 +24,65 @@ alias vpt-azure-group-show='vpt::azure::group::show'
 alias re='vpt-reload'
 
 # constants
-REPO_DIR=$(cd "$(dirname ${BASH_SOURCE})"; pwd)
-PASSWORD=asdf1234
-MONKIER=vpb
-PREFIX="${GITHUB_USER}-${MONKIER}"
+VPT_REPO_DIR=$(cd "$(dirname ${BASH_SOURCE})"; pwd)
+VPT_MONKIER=vpb
+VPT_PREFIX="${GITHUB_USER}-${VPT_MONKIER}"
 
 # keys
-REPO_SSH_DIR="${REPO_DIR}/.ssh"
-REPO_SSH_PRIVATE_KEY="${REPO_SSH_DIR}/id_rsa"
-REPO_SSH_PUBLIC_KEY="${REPO_SSH_DIR}/id_rsa.pub"
-SSH_DIR="${HOME}/.ssh"
-SSH_PRIVATE_KEY="${SSH_DIR}/id_rsa"
-SSH_PUBLIC_KEY="${SSH_DIR}/id_rsa.pub"
-SSH_AUTHORIZED_KEYS="${SSH_DIR}/authorized_keys"
+VPT_REPO_SSH_DIR="${VPT_REPO_DIR}/.ssh"
+VPT_REPO_SSH_PRIVATE_KEY="${VPT_REPO_SSH_DIR}/id_rsa"
+VPT_REPO_SSH_PUBLIC_KEY="${VPT_REPO_SSH_DIR}/id_rsa.pub"
+VPT_SSH_DIR="${HOME}/.ssh"
+VPT_SSH_PRIVATE_KEY="${VPT_SSH_DIR}/id_rsa"
+VPT_SSH_PUBLIC_KEY="${VPT_SSH_DIR}/id_rsa.pub"
+VPT_SSH_AUTHORIZED_KEYS="${VPT_SSH_DIR}/authorized_keys"
 
 # relay
-RELAY_NAMESPACE="${PREFIX}-relay"
-RELAY_NAME='bridge'
-RELAY_CONNECTION_STRING=
+VPT_RELAY_NAMESPACE="${VPT_PREFIX}-relay"
+VPT_RELAY_NAME='bridge'
 
 # service
-SSH_PORT=$( # 2222
+VPT_SSH_PORT=$( # 2222
     cat /etc/ssh/sshd_config \
         | egrep ^Port \
         | egrep -o '[0-9]*'
 )
 
 # service <- relay remote
-RELAY_REMOTE_IP=localhost
-RELAY_REMOTE_PORT="${SSH_PORT}"
+VPT_RELAY_REMOTE_IP=localhost
+VPT_RELAY_REMOTE_PORT="${VPT_SSH_PORT}"
 
 # service <- relay remote <- relay local
-RELAY_LOCAL_IP=localhost
-RELAY_LOCAL_PORT=$(( SSH_PORT + 1 )) # 2223
+VPT_RELAY_LOCAL_IP=localhost
+VPT_RELAY_LOCAL_PORT=$(( VPT_SSH_PORT + 1 )) # 2223
 
 # service <- relay remote <- relay local <- socks5 proxy
-SOCKS5_PORT=$(( RELAY_LOCAL_PORT + 1 )) # 2224
+VPT_SOCKS5_PORT=$(( VPT_RELAY_LOCAL_PORT + 1 )) # 2224
 
 # default Azure variables
 export AZURE_DISABLE_CONFIRM_PROMPT=yes
-export AZURE_DEFAULTS_GROUP="${PREFIX}-rg"
+export AZURE_DEFAULTS_GROUP="${VPT_PREFIX}-rg"
 export AZURE_DEFAULTS_LOCATION="westus"
 
-vpt::keys::install() {
+vpt::myip() {
+    curl https://api.ipify.org
+    echo
+}
+
+vpt::ssh::keys::install() {
     
     # disable ssh password prompts; securty provided by Azure Relay
-    if [[ ! -f "{SSH_PRIVATE_KEY}" ]]; then
+    if [[ ! -f "{VPT_SSH_PRIVATE_KEY}" ]]; then
     
         #  assign everyone the same private key
-        install -m u=rw,go= "${REPO_SSH_PRIVATE_KEY}" "${SSH_PRIVATE_KEY}"
+        install -m u=rw,go= "${VPT_REPO_SSH_PRIVATE_KEY}" "${VPT_SSH_PRIVATE_KEY}"
         
         # grant access to anyone with the private key
-        cat "${REPO_SSH_PUBLIC_KEY}" >> "${SSH_AUTHORIZED_KEYS}"
+        cat "${VPT_REPO_SSH_PUBLIC_KEY}" >> "${VPT_SSH_AUTHORIZED_KEYS}"
     fi
 }
 
-vpt::install() {
-    vpt::keys::install
-
-    # tenant
-    if [[ ! "${AZURE_DEFAULTS_TENANT}" ]]; then
-        read -p 'Tenant id: ' AZURE_DEFAULTS_TENANT
-    fi
-
-    # subscription
-    if [[ ! "${AZURE_DEFAULTS_SUBSCRIPTION}" ]]; then
-        read -p 'Subscription id: ' AZURE_DEFAULTS_SUBSCRIPTION
-    fi
-
-    # install az command line tool
-    if ! (which az >/dev/null); then
-        curl -sL https://aka.ms/InstallAzureCLIDeb \
-            | sudo bash 
-    fi
-        
+vpt::tool::azbridge::install() {
     # download azbridge
     if [[ ! -d ~/azure-relay-bridge-binaries ]]; then
         git clone \
@@ -109,19 +97,80 @@ vpt::install() {
     fi
 }
 
+vpt::tool::az::install() {
+    if ! (which az >/dev/null); then
+        curl -sL https://aka.ms/InstallAzureCLIDeb \
+            | sudo bash 
+    fi
+}
+
+vpt::ssh::stop() {
+    sudo /etc/init.d/ssh stop
+}
+
+vpt::ssh::start() {
+    vpt::ssh::keys::install
+
+    # /usr/local/share/ssh-init.sh
+    sudo /etc/init.d/ssh start
+}
+
+vpt::ssh::connect() {
+    ssh \
+        -p "${VPT_SSH_PORT}" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        "${USER}@localhost"
+}
+
+vpt::proxy::start() {
+    ssh \
+        -D "${VPT_SOCKS5_PORT}" \
+        -p "${VPT_SSH_PORT}" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        "${USER}@localhost"
+}
+
+vpt::proxy::curl() {
+    curl \
+        -x "socks5h://localhost:${VPT_SOCKS5_PORT}" \
+        "${1-https://api.ipify.org}"
+    echo
+}
+
+vpt::azure::env::tenant::set() {
+    if [[ ! "${AZURE_DEFAULTS_TENANT}" ]]; then
+        read -p 'Tenant id: ' AZURE_DEFAULTS_TENANT
+    fi
+}
+
+vpt::azure::env::subscription::set() {
+    if [[ ! "${AZURE_DEFAULTS_SUBSCRIPTION}" ]]; then
+        read -p 'Subscription id: ' AZURE_DEFAULTS_SUBSCRIPTION
+    fi
+}
+
 vpt::azure::login() {
-    vpt::install
+    vpt::tool::az::install
 
     # login
-    if ! az account show >/dev/null 2>/dev/null; then
-        az login \
-            --use-device-code \
-            --tenant "${AZURE_DEFAULTS_TENANT}" \
-            >/dev/null
-
-        az account set \
-            --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
+    if az account show >/dev/null 2>/dev/null; then
+        return
     fi
+
+    vpt::azure::env::tenant::set
+    vpt::azure::env::subscription::set
+
+    # get token
+    az login \
+        --use-device-code \
+        --tenant "${AZURE_DEFAULTS_TENANT}" \
+        >/dev/null
+
+    # set default subscription
+    az account set \
+        --subscription "${AZURE_DEFAULTS_SUBSCRIPTION}"
 }
 
 vpt::azure::relay::delete() {
@@ -133,12 +182,13 @@ vpt::azure::relay::delete() {
 
 vpt::azure::relay::show() {
     az relay hyco show \
-        --name "${RELAY_NAME}" \
-        --namespace-name "${RELAY_NAMESPACE}"
+        --name "${VPT_RELAY_NAME}" \
+        --namespace-name "${VPT_RELAY_NAMESPACE}"
 }
 
 vpt::azure::relay::test() {
-    vpt::azure::relay::show >/dev/null 2>&1
+    vpt::azure::relay::show \
+        >/dev/null 2>&1
 }
 
 vpt::azure::relay::create() {
@@ -152,20 +202,21 @@ vpt::azure::relay::create() {
         --name "${AZURE_DEFAULTS_GROUP}"
 
     az relay namespace create \
-        --name "${RELAY_NAMESPACE}"
+        --name "${VPT_RELAY_NAMESPACE}"
 
     az relay hyco create \
-        --name "${RELAY_NAME}" \
-        --namespace-name "${RELAY_NAMESPACE}" \
+        --name "${VPT_RELAY_NAME}" \
+        --namespace-name "${VPT_RELAY_NAMESPACE}" \
         --requires-client-authorization true
 }
 
 vpt::azure::relay::connection_string() {
-    vpt::azure::relay::create >/dev/null
+    vpt::azure::relay::create \
+        >/dev/null
 
     az relay namespace authorization-rule keys list \
         --name 'RootManageSharedAccessKey' \
-        --namespace-name "${RELAY_NAMESPACE}" \
+        --namespace-name "${VPT_RELAY_NAMESPACE}" \
         --query primaryConnectionString \
         --output tsv
 }
@@ -178,8 +229,8 @@ vpt::azure::relay::www() {
         '#@microsoft.onmicrosoft.com/resource'
         "/subscriptions/${AZURE_DEFAULTS_SUBSCRIPTION}"
         "/resourceGroups/${AZURE_DEFAULTS_GROUP}"
-        "/providers/Microsoft.Relay/namespaces/${RELAY_NAMESPACE}/hybridConnections"
-        "/${RELAY_NAME}/overview"
+        "/providers/Microsoft.Relay/namespaces/${VPT_RELAY_NAMESPACE}/hybridConnections"
+        "/${VPT_RELAY_NAME}/overview"
     )
     (
         IFS=
@@ -187,82 +238,55 @@ vpt::azure::relay::www() {
     )
 }
 
-vpt::ssh::start() {
-    /usr/local/share/ssh-init.sh
-}
-
-vpt::proxy::start() {
-    ssh \
-        -D "${SOCKS5_PORT}" \
-        -p "${SSH_PORT}" \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
-        "${USER}@localhost"
-}
-
-vpt::ssh::connect() {
-    ssh \
-        -p "${SSH_PORT}" \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
-        "${USER}@localhost"
-}
-
 vpt::azure::relay::remote::start() {
     vpt::ssh::start
 
+    vpt::tool::azbridge::install
+
     local RELAY_CONNECTION_STRING=$(vpt::azure::relay::connection_string)
     azbridge \
-        -R "${RELAY_NAME}:${RELAY_REMOTE_IP}:${RELAY_LOCAL_PORT}/${RELAY_REMOTE_PORT}" \
+        -R "${VPT_RELAY_NAME}:${VPT_RELAY_REMOTE_IP}:${VPT_RELAY_LOCAL_PORT}/${VPT_RELAY_REMOTE_PORT}" \
         -x "${RELAY_CONNECTION_STRING}"
 }
 
 vpt::azure::relay::local::start() {
+    vpt::tool::azbridge::install
+
     local RELAY_CONNECTION_STRING=$(vpt::azure::relay::connection_string)
     azbridge \
-        -L "${RELAY_LOCAL_IP}:${RELAY_LOCAL_PORT}:${RELAY_NAME}" \
+        -L "${VPT_RELAY_LOCAL_IP}:${VPT_RELAY_LOCAL_PORT}:${VPT_RELAY_NAME}" \
         -x "${RELAY_CONNECTION_STRING}"
 }
 
 vpt::azure::relay::connect() {
     ssh \
-        -p "${RELAY_LOCAL_PORT}" \
+        -p "${VPT_RELAY_LOCAL_PORT}" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         "${USER}@localhost"
 }
 
 vpt::azure::relay::proxy::start() {
+    vpt::ssh::keys::install
+ 
     ssh \
-        -D "${SOCKS5_PORT}" \
-        -p "${RELAY_LOCAL_PORT}" \
+        -D "${VPT_SOCKS5_PORT}" \
+        -p "${VPT_RELAY_LOCAL_PORT}" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         "${USER}@localhost"
 }
 
-vpt::proxy::curl() {
-    curl \
-        -x "socks5h://localhost:${SOCKS5_PORT}" \
-        "${1-https://api.ipify.org}"
-    echo
-}
-
-vpt::myip() {
-    curl https://api.ipify.org
-    echo
+vpt::azure::group::show() {
+    az group show \
+        --name "${AZURE_DEFAULTS_GROUP}"
 }
 
 vpt::azure::proxy::enable() {
     # https://docs.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-configure-proxy?tabs=bash
-    export HTTPS_PROXY="socks5h://${USER}:${PASSWORD}@localhost:${SOCKS5_PORT}"      
+    export HTTPS_PROXY="socks5h://${USER}:${PASSWORD}@localhost:${VPT_SOCKS5_PORT}"      
 }
 
 vpt::azure::proxy::disable() {
     unset HTTPS_PROXY
-}
-
-vpt::azure::group::show() {
-    az group show \
-        --name "${AZURE_DEFAULTS_GROUP}"
 }
