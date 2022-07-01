@@ -1,4 +1,4 @@
-alias vpt-reload=". $(cd "$(dirname ${BASH_SOURCE})"; pwd)/launch.sh"
+alias vpt-reload=". \$REPO_DIR/launch.sh"
 alias vpt-install='vpt::install'
 alias vpt-azure-login='vpt::azure::login'
 alias vpt-azure-relay-create='vpt::azure::relay::create'
@@ -14,13 +14,20 @@ alias vpt-socks5-start='vpt::socks5::start'
 
 alias re='vpt-reload'
 
-# scratch location for secrets
-touch .secrets
-
 # constants
+REPO_DIR=$(cd "$(dirname ${BASH_SOURCE})"; pwd)
 PASSWORD=asdf1234
 MONKIER=vpb
 PREFIX="${GITHUB_USER}-${MONKIER}"
+
+# keys
+REPO_SSH_DIR="${REPO_DIR}/.ssh"
+REPO_SSH_PRIVATE_KEY="${REPO_SSH_DIR}/id_rsa"
+REPO_SSH_PUBLIC_KEY="${REPO_SSH_DIR}/id_rsa.pub"
+SSH_DIR="${HOME}/.ssh"
+SSH_PRIVATE_KEY="${SSH_DIR}/id_rsa"
+SSH_PUBLIC_KEY="${SSH_DIR}/id_rsa.pub"
+SSH_AUTHORIZED_KEYS="${SSH_DIR}/authorized_keys"
 
 # relay
 RELAY_NAMESPACE="${PREFIX}-relay"
@@ -50,7 +57,21 @@ export AZURE_DISABLE_CONFIRM_PROMPT=yes
 export AZURE_DEFAULTS_GROUP="${PREFIX}-rg"
 export AZURE_DEFAULTS_LOCATION="westus"
 
+vpt::keys::install() {
+    
+    # disable ssh password prompts; securty provided by Azure Relay
+    if [[ ! -f "{SSH_PRIVATE_KEY}" ]]; then
+    
+        #  assign everyone the same private key
+        cp "${REPO_SSH_PRIVATE_KEY}" "${SSH_PRIVATE_KEY}"
+        
+        # grant access to anyone with the private key
+        sudo cat "${REPO_SSH_PUBLIC_KEY}" >> "${SSH_AUTHORIZED_KEYS}"
+    fi
+}
+
 vpt::install() {
+    vpt::keys::install
 
     # tenant
     if [[ ! "${AZURE_DEFAULTS_TENANT}" ]]; then
