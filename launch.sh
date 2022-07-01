@@ -92,23 +92,20 @@ vpt::install() {
     # install az command line tool
     if ! (which az >/dev/null); then
         curl -sL https://aka.ms/InstallAzureCLIDeb \
-            | sudo bash \
-            >/dev/null
+            | sudo bash 
     fi
         
     # download azbridge
     if [[ ! -d ~/azure-relay-bridge-binaries ]]; then
         git clone \
             https://github.com/kingces95/azure-relay-bridge-binaries \
-            ~/azure-relay-bridge-binaries \
-            >/dev/null
+            ~/azure-relay-bridge-binaries 
     fi
 
     # install azbridge
     if ! (azbridge >/dev/null); then
         sudo apt install \
-            ~/azure-relay-bridge-binaries/azbridge.0.3.0-rtm.ubuntu.20.04-x64.deb \
-            >/dev/null
+            ~/azure-relay-bridge-binaries/azbridge.0.3.0-rtm.ubuntu.20.04-x64.deb
     fi
 }
 
