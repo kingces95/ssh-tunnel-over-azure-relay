@@ -1,28 +1,27 @@
 # ssh-tunnel-over-azure-relay
-Establish an SSH tunnel over an azure relay created with azbridge between two codespaces.
+Issue an `az` https request via a proxy over an Azure Relay.
 
 # Server codespace
-Enter your Azure tenant and subscription when prompted. The Azure relay will automatically be created.
+Open a codespace for this repo and launch a bash shell. 
 ```
-$ curl api.ipify.org # get server IP address
-$ . launch.sh server
-Tenant id:
-Subscription id:
-Relay: https://ms.portal.azure.com/deep/link/to/relay
-Starting ssh server ...
-Starting azbridge server...
+$ . vpt.sh
+$ vpt-azure-relay-remote-start
 ```
 # Client codespace
-Enter your Azure tenant and subscription when prompted.
+Open a codespace for this repo and launch a bash shell.
 ```
-$ . launch.sh client
-Tenant id:
-Subscription id:
-Relay: https://ms.portal.azure.com/deep/link/to/relay
-Starting azbridge client...
+$ . vpt.sh
+$ vpt-azure-relay-local-start
 ```
-Then, in a new bash window
+Then, in a new bash window, start the proxy
 ```
-$ . launch.sh ssh
-$ curl api.ipify.org # should return server IP
+$ . vpt.sh
+$ vpt-azure-relay-proxy-start
 ```
+Then, in a new bash window, enable the proxy and use it
+```
+$ . vpt.sh
+$ vpt-azure-proxy-enable
+$ vpt-azure-group-show
+```
+Finally, to prove the proxy is in use over the relay, exit the proxy and/or the relay try the request again.
