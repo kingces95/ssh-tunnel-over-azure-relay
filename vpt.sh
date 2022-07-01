@@ -1,4 +1,4 @@
-alias vpt-reload=". \$REPO_DIR/env.sh"
+alias vpt-reload=". \$REPO_DIR/vpt.sh"
 alias vpt-install='vpt::install'
 alias vpt-azure-login='vpt::azure::login'
 alias vpt-azure-relay-create='vpt::azure::relay::create'
