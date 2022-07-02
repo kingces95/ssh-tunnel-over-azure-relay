@@ -69,6 +69,23 @@ vpt::myip() {
     echo
 }
 
+vpt::ssh::key::install() {
+    if [[ ! -f "{VPT_SSH_PRIVATE_KEY}" ]]; then
+        # authenticate clients by private key
+        install -m u=rw,go= "${VPT_REPO_SSH_PRIVATE_KEY}" "${VPT_SSH_PRIVATE_KEY}"
+    fi
+}
+
+vpt::ssh::key::authorize() {
+    if ! cat ${VPT_SSH_AUTHORIZED_KEYS} \
+        | grep "$(cat "${VPT_REPO_SSH_PUBLIC_KEY}")" \
+        >/dev/null 2>&1
+    then
+        # grant access to clients who own key
+        cat "${VPT_REPO_SSH_PUBLIC_KEY}" >> "${VPT_SSH_AUTHORIZED_KEYS}"
+    fi
+}
+
 vpt::ssh::keys::install() {
     
     # disable ssh password prompts; securty provided by Azure Relay
@@ -109,26 +126,37 @@ vpt::ssh::stop() {
 }
 
 vpt::ssh::start() {
-    vpt::ssh::keys::install
+    vpt::ssh::key::authorize
 
     # /usr/local/share/ssh-init.sh
     sudo /etc/init.d/ssh start
 }
 
-vpt::ssh::connect() {
+vpt::ssh::exec() {
+    vpt::ssh::key::install
+
+    local ARGS=( "$@" )
+    local DESTINATION="${ARGS[-1]}"
+
+    unset ARGS[-1]
+
     ssh \
-        -p "${VPT_SSH_PORT}" \
+        "${ARGS[@]}" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
+        "${DESTINATION}"
+}
+
+vpt::ssh::connect() {
+    vpt::ssh::exec \
+        -p "${VPT_SSH_PORT}" \
         "${USER}@localhost"
 }
 
 vpt::proxy::start() {
-    ssh \
+    vpt::ssh::exec \
         -D "${VPT_SOCKS5_PORT}" \
         -p "${VPT_SSH_PORT}" \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
         "${USER}@localhost"
 }
 
@@ -259,21 +287,15 @@ vpt::azure::relay::local::start() {
 }
 
 vpt::azure::relay::connect() {
-    ssh \
+    vpt::ssh::exec \
         -p "${VPT_RELAY_LOCAL_PORT}" \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
         "${USER}@localhost"
 }
 
 vpt::azure::relay::proxy::start() {
-    vpt::ssh::keys::install
- 
-    ssh \
+    vpt::ssh::exec \
         -D "${VPT_SOCKS5_PORT}" \
         -p "${VPT_RELAY_LOCAL_PORT}" \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
         "${USER}@localhost"
 }
 
