@@ -1,6 +1,4 @@
 vpt::uup() {
-    vpt::tool::nc::install
-
     local PORT="$1"
     shift
 

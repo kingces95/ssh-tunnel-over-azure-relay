@@ -26,9 +26,9 @@ vpt::azbridge::remote::start() {
 
 vpt::azbridge::local::start::async() {
     # TODO: wait for bridge to have a listener
-    vpt::azbridge::local::start &
+    vpt::azbridge::local::start >/dev/null 2>&1 &
 }
 
 vpt::azbridge::remote::start::async() {
-    vpt::azbridge::remote::start &
+    vpt::azbridge::remote::start >/dev/null 2>&1 &
 }

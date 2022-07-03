@@ -15,6 +15,7 @@ vpt::create_bridge() {
 }
 
 vpt::start_remote() {
+    vpt::tool::nc::install
     vpt::tool::azbridge::install
     
     # add anonymous user
@@ -31,6 +32,8 @@ vpt::start_remote() {
 }
 
 vpt::start_local() {
+    vpt::tool::nc::install
+
     vpt::create_bridge
 
     # start local bridge
@@ -49,7 +52,7 @@ vpt::demo() {
 }
 
 vpt::stop_jobs() {
-    while kill %; do
+    while kill % >/dev/null 2>&1; do
         sleep 1
     done
 }

@@ -70,6 +70,6 @@ vpt::ssh::azure::relay::proxy::start::async() {
 vpt::ssh::proxy::curl() {
     vpt::uup "${VPT_SOCKS5H_PORT}"
     curl \
-        -x "${VPT_SOCKS5H_CURL_X}" \
+        -x "${VPT_SOCKS5H_URL}" \
         "$1"
 }

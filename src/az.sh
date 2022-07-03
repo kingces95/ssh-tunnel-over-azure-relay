@@ -50,7 +50,7 @@ vpt::az::proxy() (
 
 vpt::az::proxy::enable() {
     # https://docs.microsoft.com/en-us/azure/developer/python/sdk/azure-sdk-configure-proxy?tabs=bash
-    export HTTPS_PROXY="${VPT_SOCKS5H_HTTPS_PROXY}"
+    export HTTPS_PROXY="${VPT_SOCKS5H_URL}"
 }
 
 vpt::az::proxy::disable() {

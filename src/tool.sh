@@ -39,5 +39,5 @@ vpt::tool::nc::install() {
         return
     fi
 
-    apt install -y netcat 
+    sudo apt install -y netcat 
 }

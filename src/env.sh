@@ -55,8 +55,7 @@ declare VPT_AZURE_RELAY_LOCAL_PORT=$(( VPT_SSH_PORT + 1 )) # 2223
 # service <- relay remote <- relay local <- socks5 proxy
 declare VPT_SOCKS5H_PORT=$(( VPT_AZURE_RELAY_LOCAL_PORT + 1 )) # 2224
 declare VPT_SOCKS5H_SCHEME='socks5h://'
-declare VPT_SOCKS5H_CURL_X="${VPT_SOCKS5H_SCHEME}localhost:${VPT_SOCKS5H_PORT}"
-declare VPT_SOCKS5H_HTTPS_PROXY="${VPT_SOCKS5H_SCHEME}${VPT_AZURE_USER}:${PASSWORD}@localhost:${VPT_SOCKS5H_PORT}"
+declare VPT_SOCKS5H_URL="${VPT_SOCKS5H_SCHEME}localhost:${VPT_SOCKS5H_PORT}"
 
 # testing
 declare VPT_MYIP='https://api.ipify.org'
