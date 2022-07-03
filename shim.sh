@@ -1,5 +1,9 @@
-alias vpt-reload=". \$VPT_DIR_REPO/shim.sh"
+alias vpt-reload="vpt::reload"
 alias re='vpt-reload'
+vpt::reload() {
+    vpt::log::clear
+    . "${VPT_DIR_REPO}/shim.sh"
+}
 
 # identity
 if [[ "${GITHUB_USER}" ]]; then

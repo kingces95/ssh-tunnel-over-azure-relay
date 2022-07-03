@@ -1,6 +1,9 @@
 # shim
 declare VPT_DIR_REPO
 
+# log
+declare VPT_LOG="/tmp/vpt.log"
+
 # azure login
 declare VPT_AZURE_TENANT
 declare VPT_AZURE_SUBSCRIPTION
