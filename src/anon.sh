@@ -12,11 +12,9 @@ vpt::anonymous::create() {
         return
     fi
 
-    sudo adduser "${VPT_ANONYMOUS}" \
-        --disabled-password \
+    sudo adduser "${VPT_ANONYMOUS}2" \
         --gecos "" \
         --quiet
-        user2
 
     sudo mkdir -p $(dirname "${VPT_ANONYMOUS_AUTHORIZED_KEYS}")
     sudo cp "${VPT_SSH_PUBLIC_KEY}" "${VPT_ANONYMOUS_AUTHORIZED_KEYS}"

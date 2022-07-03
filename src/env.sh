@@ -9,11 +9,10 @@ declare VPT_AZURE_SUBSCRIPTION
 declare VPT_ANONYMOUS=anon
 declare VPT_ANONYMOUS_UPN="${VPT_ANONYMOUS}@localhost"
 declare VPT_ANONYMOUS_DIR="/home/${VPT_ANONYMOUS}"
-declare VPT_ANONYMOUS_DIR_SSH="${VPT_ANONYMOUS_DIR}/.ssh"
-declare VPT_ANONYMOUS_AUTHORIZED_KEYS="${VPT_ANONYMOUS_DIR_SSH}/authorized_keys"
+declare VPT_ANONYMOUS_AUTHORIZED_KEYS="${VPT_ANONYMOUS_DIR}/.ssh/authorized_keys"
 
 # user
-declare VPT_USER_PRIVATE_KEY="${HOME}/id_rsa"
+declare VPT_USER_PRIVATE_KEY="${HOME}/.ssh/id_rsa"
 
 # dirs
 declare VPT_DIR_SRC=$(cd "$(dirname ${BASH_SOURCE})"; pwd)
@@ -33,7 +32,6 @@ declare VPT_SSH_PUBLIC_KEY="${VPT_DIR_SSH}/id_rsa.pub"
 declare VPT_AZURE_PREFIX="vpt-${VPT_AZURE_USER}"
 declare VPT_AZURE_LOCATION='westus'
 declare VPT_AZURE_GROUP="${VPT_AZURE_PREFIX}-rg"
-
 
 # azure relay
 declare VPT_AZURE_RELAY_NAMESPACE="${VPT_AZURE_PREFIX}-relay"

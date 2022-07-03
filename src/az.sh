@@ -3,8 +3,6 @@ alias vpt-az-proxy-disable='vpt::az::proxy::disable'
 alias vpt-az-login='vpt::az::login'
 
 vpt::az() (
-    vpt::tool::az::install
-
     export AZURE_DISABLE_CONFIRM_PROMPT=yes
     export AZURE_DEFAULTS_GROUP="${VPT_AZURE_GROUP}"
     export AZURE_DEFAULTS_LOCATION="${VPT_AZURE_LOCATION}"

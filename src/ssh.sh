@@ -4,6 +4,7 @@ alias vpt-ssh-connect='vpt::ssh::connect'
 alias vpt-ssh-proxy-start='vpt::ssh::proxy::start'
 alias vpt-ssh-azure-relay-connect='vpt::ssh::azure::relay::connect'
 alias vpt-ssh-azure-relay-proxy-start='vpt::ssh::azure::relay::proxy::start'
+alias vpt-ssh-azure-relay-proxy-start-async='vpt::ssh::azure::relay::proxy::start::async'
 alias vpt-ssh-proxy-curl='vpt::ssh::proxy::curl'
 alias vpt-ssh-key-install='vpt::ssh::key::install'
 
@@ -17,10 +18,11 @@ vpt::ssh::key::install() {
 vpt::ssh() {
     vpt::ssh::key::install
 
-    echo ssh \
+    ssh \
         "$@" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
+        -o LogLevel=ERROR \
         "${VPT_ANONYMOUS_UPN}"
 }
 
@@ -29,8 +31,6 @@ vpt::ssh::stop() {
 }
 
 vpt::ssh::start() {
-    vpt::ssh::key::authorize
-
     # codespaces launches an sshd server at startup
     # /usr/local/share/ssh-init.sh
     sudo /etc/init.d/ssh start
@@ -58,7 +58,11 @@ vpt::ssh::azure::relay::proxy::start() {
     vpt::ssh \
         -D "${VPT_SOCKS5H_PORT}" \
         -p "${VPT_AZURE_RELAY_LOCAL_PORT}" \
-        -N &
+        -N
+}
+
+vpt::ssh::azure::relay::proxy::start::async() {
+    vpt::ssh::azure::relay::proxy::start &
 }
 
 vpt::ssh::proxy::curl() {
