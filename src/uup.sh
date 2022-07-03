@@ -2,7 +2,7 @@ vpt::uup() {
     local PORT="$1"
     shift
 
-    local TIMEOUT="${1-10}"
+    local TIMEOUT="${1-${VPT_UUP_TIMEOUT}}"
     shift
 
     local TICKS

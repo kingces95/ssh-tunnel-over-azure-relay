@@ -4,6 +4,9 @@ declare VPT_DIR_REPO
 # log
 declare VPT_LOG="/tmp/vpt.log"
 
+# you-up
+declare VPT_UUP_TIMEOUT=60
+
 # azure login
 declare VPT_AZURE_TENANT
 declare VPT_AZURE_SUBSCRIPTION
