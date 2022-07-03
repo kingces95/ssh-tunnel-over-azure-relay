@@ -7,6 +7,7 @@ vpt::myip::curl() {
 }
 
 vpt::myip::proxy::curl() {
+    vpt::uup "${VPT_SOCKS5H_PORT}" 
     vpt::ssh::proxy::curl "${VPT_MYIP}"
     echo
 }

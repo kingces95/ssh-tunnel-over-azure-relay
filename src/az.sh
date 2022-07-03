@@ -43,6 +43,7 @@ vpt::az::login() {
 }
 
 vpt::az::proxy() (
+    vpt::uup "${VPT_SOCKS5H_PORT}" 
     vpt::az::proxy::enable
     vpt::az "$@"
 )

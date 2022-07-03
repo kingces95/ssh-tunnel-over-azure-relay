@@ -16,8 +16,6 @@ vpt::ssh::key::install() {
 }
 
 vpt::ssh() {
-    vpt::ssh::key::install
-
     ssh \
         "$@" \
         -o StrictHostKeyChecking=no \
@@ -37,17 +35,20 @@ vpt::ssh::start() {
 }
 
 vpt::ssh::connect() {
+    vpt::uup "${VPT_SSH_PORT}"
     vpt::ssh \
         -p "${VPT_SSH_PORT}"
 }
 
 vpt::ssh::proxy::start() {
+    vpt::uup "${VPT_SSH_PORT}"
     vpt::ssh \
         -D "${VPT_SOCKS5H_PORT}" \
         -p "${VPT_SSH_PORT}"
 }
 
 vpt::ssh::azure::relay::connect() {
+    vpt::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
     vpt::ssh \
         -p "${VPT_AZURE_RELAY_LOCAL_PORT}"
 }
@@ -55,6 +56,7 @@ vpt::ssh::azure::relay::connect() {
 vpt::ssh::azure::relay::proxy::start() {
     # https://www.metahackers.pro/ssh-tunnel-as-socks5-proxy/
 
+    vpt::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
     vpt::ssh \
         -D "${VPT_SOCKS5H_PORT}" \
         -p "${VPT_AZURE_RELAY_LOCAL_PORT}" \
@@ -66,6 +68,7 @@ vpt::ssh::azure::relay::proxy::start::async() {
 }
 
 vpt::ssh::proxy::curl() {
+    vpt::uup "${VPT_SOCKS5H_PORT}"
     curl \
         -x "${VPT_SOCKS5H_CURL_X}" \
         "$1"

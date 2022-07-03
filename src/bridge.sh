@@ -18,12 +18,14 @@ vpt::azbridge::local::start() {
 }
 
 vpt::azbridge::remote::start() {
+    vpt::uup "${VPT_SSH_PORT}" 
     # azbridge bridge:localhost:2223/2222
     vpt::azbridge \
         -R "${VPT_AZURE_RELAY_NAME}:${VPT_AZURE_RELAY_REMOTE_IP}:${VPT_AZURE_RELAY_LOCAL_PORT}/${VPT_AZURE_RELAY_REMOTE_PORT}"
 }
 
 vpt::azbridge::local::start::async() {
+    # TODO: wait for bridge to have a listener
     vpt::azbridge::local::start &
 }
 
