@@ -3,6 +3,7 @@
 vpt-az-login
 vpt-azure-group-create
 vpt-azure-relay-create
+vpt-anonymous-create
 vpt-ssh-start
 vpt-azbridge-remote-start
 vpt-azbridge-local-start; sleep 1

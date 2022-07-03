@@ -5,10 +5,19 @@ declare VPT_DIR_REPO
 declare VPT_AZURE_TENANT
 declare VPT_AZURE_SUBSCRIPTION
 
+# anonymous
+declare VPT_ANONYMOUS=anon
+declare VPT_ANONYMOUS_UPN="${VPT_ANONYMOUS}@localhost"
+declare VPT_ANONYMOUS_DIR="/home/${VPT_ANONYMOUS}"
+declare VPT_ANONYMOUS_DIR_SSH="${VPT_ANONYMOUS_DIR}/.ssh"
+declare VPT_ANONYMOUS_AUTHORIZED_KEYS="${VPT_ANONYMOUS_DIR_SSH}/authorized_keys"
+
+# user
+declare VPT_USER_PRIVATE_KEY="${HOME}/id_rsa"
+
 # dirs
 declare VPT_DIR_SRC=$(cd "$(dirname ${BASH_SOURCE})"; pwd)
-declare VPT_DIR_SRC_SSH="${VPT_DIR_REPO}/.ssh"
-declare VPT_DIR_HOME_SSH="${HOME}/.ssh"
+declare VPT_DIR_SSH="${VPT_DIR_REPO}/.ssh"
 
 # tools
 declare VPT_TOOL_AZ_INSTALL_SCRIPT='https://aka.ms/InstallAzureCLIDeb'
@@ -17,13 +26,11 @@ declare VPT_TOOL_AZBRIDGE_REPO_DIR="${HOME}/azure-relay-bridge-binaries"
 declare VPT_TOOL_AZBRIDGE_DEB='azbridge.0.3.0-rtm.ubuntu.20.04-x64.deb'
 
 # keys
-declare VPT_SSH_PRIVATE_KEY="${VPT_DIR_SRC_SSH}/id_rsa"
-declare VPT_SSH_PUBLIC_KEY="${VPT_DIR_SRC_SSH}/id_rsa.pub"
-declare VPT_OS_SSH_PRIVATE_KEY="${VPT_DIR_HOME_SSH}/id_rsa"
-declare VPT_OS_SSH_AUTHORIZED_KEYS="${VPT_DIR_HOME_SSH}/authorized_keys"
+declare VPT_SSH_PRIVATE_KEY="${VPT_DIR_SSH}/id_rsa"
+declare VPT_SSH_PUBLIC_KEY="${VPT_DIR_SSH}/id_rsa.pub"
 
 # azure
-declare VPT_AZURE_PREFIX="vpt-${USER}"
+declare VPT_AZURE_PREFIX="vpt-${VPT_AZURE_USER}"
 declare VPT_AZURE_LOCATION='westus'
 declare VPT_AZURE_GROUP="${VPT_AZURE_PREFIX}-rg"
 
@@ -51,7 +58,7 @@ declare VPT_AZURE_RELAY_LOCAL_PORT=$(( VPT_SSH_PORT + 1 )) # 2223
 declare VPT_SOCKS5H_PORT=$(( VPT_AZURE_RELAY_LOCAL_PORT + 1 )) # 2224
 declare VPT_SOCKS5H_SCHEME='socks5h://'
 declare VPT_SOCKS5H_CURL_X="${VPT_SOCKS5H_SCHEME}localhost:${VPT_SOCKS5H_PORT}"
-declare VPT_SOCKS5H_HTTPS_PROXY="${VPT_SOCKS5H_SCHEME}${USER}:${PASSWORD}@localhost:${VPT_SOCKS5H_PORT}"
+declare VPT_SOCKS5H_HTTPS_PROXY="${VPT_SOCKS5H_SCHEME}${VPT_AZURE_USER}:${PASSWORD}@localhost:${VPT_SOCKS5H_PORT}"
 
 # testing
 declare VPT_MYIP='https://api.ipify.org'
