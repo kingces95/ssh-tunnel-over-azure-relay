@@ -26,7 +26,7 @@ vpt::az::env::subscription::set() {
 
 vpt::az::login() {
     # login
-    if az account show >/dev/null 2>/dev/null; then
+    if vpt::az account show >/dev/null 2>/dev/null; then
         return
     fi
 
@@ -34,13 +34,13 @@ vpt::az::login() {
     vpt::az::env::subscription::set
 
     # get token
-    az login \
+    vpt::az login \
         --use-device-code \
         --tenant "${VPT_AZURE_TENANT}" \
         >/dev/null
 
     # set default subscription
-    az account set \
+    vpt::az account set \
         --subscription "${VPT_AZURE_SUBSCRIPTION}"
 }
 

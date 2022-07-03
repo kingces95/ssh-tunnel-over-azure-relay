@@ -35,8 +35,8 @@ vpt::azure::relay::delete() {
         return
     fi
 
-    vpt::az group delete \
-        --name "${AZURE_DEFAULTS_GROUP}"
+    vpt::az relay namespace delete \
+        --name "${VPT_AZURE_RELAY_NAMESPACE}"
 }
 
 vpt::azure::relay::connection_string() {
@@ -57,7 +57,7 @@ vpt::azure::relay::www() {
         'https://ms.portal.azure.com/'
         '#@microsoft.onmicrosoft.com/resource'
         "/subscriptions/${VPT_AZURE_SUBSCRIPTION}"
-        "/resourceGroups/${AZURE_DEFAULTS_GROUP}"
+        "/resourceGroups/${VPT_AZURE_GROUP}"
         "/providers/Microsoft.Relay/namespaces/${VPT_AZURE_RELAY_NAMESPACE}/hybridConnections"
         "/${VPT_AZURE_RELAY_NAME}/overview"
     )

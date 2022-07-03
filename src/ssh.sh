@@ -16,7 +16,8 @@ vpt::ssh::key::install() {
 }
 
 vpt::ssh::key::authorize() {
-    if ! cat ${VPT_OS_SSH_AUTHORIZED_KEYS} \
+    # instead of sudo echo "${USER}:asdf1234" | chpasswd
+    if ! cat "${VPT_OS_SSH_AUTHORIZED_KEYS}" \
         | grep "$(cat "${VPT_SSH_PUBLIC_KEY}")" \
         >/dev/null 2>&1
     then
@@ -49,7 +50,7 @@ vpt::ssh::start() {
 
     # codespaces launches an sshd server at startup
     # /usr/local/share/ssh-init.sh
-    # sudo /etc/init.d/ssh start
+    sudo /etc/init.d/ssh start
 }
 
 vpt::ssh::connect() {

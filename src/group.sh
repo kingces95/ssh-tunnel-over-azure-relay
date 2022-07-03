@@ -5,7 +5,7 @@ alias vpt-azure-group-test='vpt::azure::group::test'
 
 vpt::azure::group::show() {
     vpt::az group show \
-        --name "${AZURE_DEFAULTS_GROUP}"
+        --name "${VPT_AZURE_GROUP}"
 }
 
 vpt::azure::group::test() {
@@ -19,7 +19,7 @@ vpt::azure::group::create() {
     fi
 
     vpt::az group create \
-        --name "${AZURE_DEFAULTS_GROUP}"
+        --name "${VPT_AZURE_GROUP}"
 }
 
 vpt::azure::group::delete() {
@@ -28,5 +28,5 @@ vpt::azure::group::delete() {
     fi
 
     vpt::az group delete \
-        --name "${AZURE_DEFAULTS_GROUP}"
+        --name "${VPT_AZURE_GROUP}"
 }
