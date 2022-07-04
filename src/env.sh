@@ -6,6 +6,7 @@ declare VPT_LOG="/tmp/vpt.log"
 
 # you-up
 declare VPT_UUP_TIMEOUT=60
+declare VPT_SSH_TIMEOUT=60
 
 # azure login
 declare VPT_AZURE_TENANT

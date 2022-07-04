@@ -18,9 +18,14 @@ vpt::log::cat() {
     cat "${VPT_LOG}"
 }
 
+vpt::log::exec() {
+    exec 1> >(vpt::log "${FUNCNAME[1]}" '-')
+    exec 2> >(exec 1>&2; vpt::log "${FUNCNAME[1]}" '!')
+}
+
 vpt::log() {
     while read -r; do
-        vpt::log::ts "${FUNCNAME[1]}" "${REPLY}"
+        echo "$@" "${REPLY}"
     done
 }
 

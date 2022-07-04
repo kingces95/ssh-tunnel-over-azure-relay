@@ -1,19 +1,12 @@
 vpt::uup() {
+    # https://www.golinuxcloud.com/test-ssh-connection/
+
     local PORT="$1"
     shift
 
     local TIMEOUT="${1-${VPT_UUP_TIMEOUT}}"
     shift
 
-    local TICKS
-    for ((TICKS=0; TICKS<"${TIMEOUT}"; TICKS++)); do
-        if nc -z localhost "${PORT}"; then
-            return;
-        fi
-          
-        sleep 1
-    done
-
-    echo "ERROR: Timeout waiting for port ${PORT}." 1>&2
-    return 1
+    vpt::timeout "${TIMEOUT}" nc -z localhost "${PORT}"
 }
+

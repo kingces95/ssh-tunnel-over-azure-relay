@@ -9,8 +9,8 @@ vpt-start-local
 echo 'vpt-demo'
 vpt-demo
 
-# echo 'vpt-stop-jobs'
-# vpt-stop-jobs
+echo 'vpt-stop-jobs'
+vpt-stop-jobs
 
-# echo 'vpt-delete-bridge'
-# vpt-delete-bridge
+echo 'vpt-delete-bridge'
+vpt-delete-bridge
