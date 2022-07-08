@@ -16,7 +16,7 @@ vpt::azure::relay::test() {
         >/dev/null 2>&1
 }
 
-vpt::azure::relay::create() {
+vpt::azure::relay::create() (
     if vpt::azure::relay::test; then
         return
     fi
@@ -28,7 +28,7 @@ vpt::azure::relay::create() {
         --name "${VPT_AZURE_RELAY_NAME}" \
         --namespace-name "${VPT_AZURE_RELAY_NAMESPACE}" \
         --requires-client-authorization true
-}
+)
 
 vpt::azure::relay::delete() {
     if ! vpt::azure::relay::test; then

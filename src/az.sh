@@ -1,6 +1,7 @@
 alias vpt-az-proxy-enable='vpt::az::proxy::enable'
 alias vpt-az-proxy-disable='vpt::az::proxy::disable'
 alias vpt-az-login='vpt::az::login'
+alias vpt-az-login-test='vpt::az::login::test'
 
 vpt::az() (
     export AZURE_DISABLE_CONFIRM_PROMPT=yes
@@ -20,6 +21,19 @@ vpt::az::env::subscription::set() {
     if [[ ! "${VPT_AZURE_SUBSCRIPTION}" ]]; then
         read -p 'Subscription id: ' VPT_AZURE_SUBSCRIPTION
     fi
+}
+
+vpt::az::login::test() {
+    vpt::az logout
+
+    vpt::az login \
+        --allow-no-subscriptions \
+        --username "${VPT_AZURE_UPN}" \
+        --password "${VPT_AZURE_PASSWORD}"
+        
+    # set default subscription
+    vpt::az account set \
+        --subscription "${VPT_AZURE_SUBSCRIPTION}"
 }
 
 vpt::az::login() {

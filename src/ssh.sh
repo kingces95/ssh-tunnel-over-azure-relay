@@ -15,24 +15,40 @@ vpt::ssh::key::install() {
     fi
 }
 
+vpt::ssh::uup() {
+    local PORT="$1"
+    shift
+
+    local TIMEOUT="${1-${VPT_SSH_TIMEOUT}}"
+    shift
+
+    vpt::timeout "${TIMEOUT}" \
+        ssh \
+            "${VPT_SSH_DEFAULTS[@]}" \
+            -q \
+            -p "${PORT}" \
+            "${VPT_ANONYMOUS_UPN}" \
+            'exit 0'
+}
+
 vpt::ssh() {
     ssh \
+        "${VPT_SSH_DEFAULTS[@]}" \
         "$@" \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
-        -o LogLevel=ERROR \
         "${VPT_ANONYMOUS_UPN}"
 }
 
-vpt::ssh::stop() {
+vpt::ssh::stop() (
+    vpt::log::exec
     sudo /etc/init.d/ssh stop
-}
+)
 
-vpt::ssh::start() {
+vpt::ssh::start() (
+    vpt::log::exec
     # codespaces launches an sshd server at startup
     # /usr/local/share/ssh-init.sh
     sudo /etc/init.d/ssh start
-}
+)
 
 vpt::ssh::connect() {
     vpt::uup "${VPT_SSH_PORT}"
@@ -40,35 +56,53 @@ vpt::ssh::connect() {
         -p "${VPT_SSH_PORT}"
 }
 
-vpt::ssh::proxy::start() {
-    vpt::uup "${VPT_SSH_PORT}"
+vpt::ssh::proxy::start() (
+    vpt::log::exec
+
+    vpt::ssh::uup "${VPT_SSH_PORT}"
     vpt::ssh \
         -D "${VPT_SOCKS5H_PORT}" \
         -p "${VPT_SSH_PORT}"
-}
+)
 
 vpt::ssh::azure::relay::connect() {
-    vpt::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
+    vpt::ssh::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
     vpt::ssh \
         -p "${VPT_AZURE_RELAY_LOCAL_PORT}"
 }
 
-vpt::ssh::azure::relay::proxy::start() {
+vpt::ssh::azure::relay::proxy::start() (
+    vpt::log::exec
     # https://www.metahackers.pro/ssh-tunnel-as-socks5-proxy/
 
-    vpt::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
+    vpt::ssh::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
     vpt::ssh \
         -D "${VPT_SOCKS5H_PORT}" \
         -p "${VPT_AZURE_RELAY_LOCAL_PORT}" \
         -N
-}
+)
+
+vpt::ssh::azure::relay::proxy6::start::async() (
+    vpt::ssh::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
+    vpt::ssh \
+        -6 \
+        -D "${VPT_SOCKS5H_PORT}" \
+        -p "${VPT_AZURE_RELAY_LOCAL_PORT}" \
+        -N \
+        &
+)
 
 vpt::ssh::azure::relay::proxy::start::async() {
-    vpt::ssh::azure::relay::proxy::start &
+    vpt::ssh::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
+    vpt::ssh \
+        -D "${VPT_SOCKS5H_PORT}" \
+        -p "${VPT_AZURE_RELAY_LOCAL_PORT}" \
+        -N \
+        &
 }
 
 vpt::ssh::proxy::curl() {
-    vpt::uup "${VPT_SOCKS5H_PORT}"
+    vpt::ssh::uup "${VPT_SOCKS5H_PORT}"
     curl \
         -x "${VPT_SOCKS5H_URL}" \
         "$1"
