@@ -30,7 +30,7 @@ declare -g VPT_SSH_PRIVATE_KEY="${VPT_DIR_SSH}/id_rsa"
 declare -g VPT_SSH_PUBLIC_KEY="${VPT_DIR_SSH}/id_rsa.pub"
 
 # azure
-declare -g VPT_AZURE_TAG='test'
+declare -g VPT_AZURE_TAG="${VPT_AZURE_TAG:-test}"
 declare -g VPT_AZURE_PREFIX="vpt-${VPT_AZURE_TAG}"
 declare -g VPT_AZURE_LOCATION='westus'
 declare -g VPT_AZURE_GROUP="${VPT_AZURE_PREFIX}-rg"

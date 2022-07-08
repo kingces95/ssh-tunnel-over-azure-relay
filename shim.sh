@@ -8,13 +8,6 @@ vpt::shim::reload() {
     . "${VPT_DIR_REPO}/shim.sh"
 }
 
-vpt::shim::test::admin() {
-    echo 'vpt-azure-group-create'
-    vpt-azure-group-create
-
-    vpt::shim::test
-}
-
 vpt::shim::test() {
     echo 'create-bridge'
     vpt-create-bridge
@@ -32,6 +25,7 @@ if [[ "${GITHUB_USER}" ]]; then
     declare -g VPT_AZURE_TENANT="${VPT_CODESPACE_SECRET_AZURE_TENANT}"
     declare -g VPT_AZURE_PASSWORD="${VPT_CODESPACE_SECRET_AZURE_TEST_PASSWORD}"
     declare -g VPT_AZURE_UPN="${VPT_CODESPACE_SECRET_AZURE_TEST_UPN}"
+    declare -g VPT_AZURE_TAG="${VPT_CODESPACE_AZURE_TAG}"
 else
     declare -g VPT_AZURE_USER="${USER}"
 fi
