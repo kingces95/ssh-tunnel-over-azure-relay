@@ -23,19 +23,18 @@ vpt::ssh::uup() {
     shift
 
     vpt::timeout "${TIMEOUT}" \
-        ssh -q \
+        ssh \
+            "${VPT_SSH_DEFAULTS[@]}" \
+            -q \
             -p "${PORT}" \
-            -o StrictHostKeyChecking=no \
             "${VPT_ANONYMOUS_UPN}" \
             'exit 0'
 }
 
 vpt::ssh() {
     ssh \
+        "${VPT_SSH_DEFAULTS[@]}" \
         "$@" \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
-        -o LogLevel=ERROR \
         "${VPT_ANONYMOUS_UPN}"
 }
 
@@ -83,8 +82,23 @@ vpt::ssh::azure::relay::proxy::start() (
         -N
 )
 
+vpt::ssh::azure::relay::proxy6::start::async() (
+    vpt::ssh::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
+    vpt::ssh \
+        -6 \
+        -D "${VPT_SOCKS5H_PORT}" \
+        -p "${VPT_AZURE_RELAY_LOCAL_PORT}" \
+        -N \
+        &
+)
+
 vpt::ssh::azure::relay::proxy::start::async() {
-    vpt::ssh::azure::relay::proxy::start &
+    vpt::ssh::uup "${VPT_AZURE_RELAY_LOCAL_PORT}"
+    vpt::ssh \
+        -D "${VPT_SOCKS5H_PORT}" \
+        -p "${VPT_AZURE_RELAY_LOCAL_PORT}" \
+        -N \
+        &
 }
 
 vpt::ssh::proxy::curl() {

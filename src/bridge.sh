@@ -6,9 +6,12 @@ alias vpt-azbridge-local-start-async='vpt::azbridge::local::start::async'
 vpt::azbridge() {
     local RELAY_CONNECTION_STRING=$(vpt::azure::relay::connection_string)
 
-    azbridge \
-        "$@" \
-        -x "${RELAY_CONNECTION_STRING}"
+    if "${VPT_AZBRIDGE_ASYNC-false}"; then
+        azbridge "$@" -x "${RELAY_CONNECTION_STRING}" &
+        return
+    fi
+
+    azbridge "$@" -x "${RELAY_CONNECTION_STRING}"
 }
 
 vpt::azbridge::local::start() {
@@ -25,10 +28,11 @@ vpt::azbridge::remote::start() {
 }
 
 vpt::azbridge::local::start::async() {
-    # TODO: wait for bridge to have a listener
-    vpt::azbridge::local::start >/dev/null 2>&1 &
+    VPT_AZBRIDGE_ASYNC=true \
+        vpt::azbridge::local::start
 }
 
 vpt::azbridge::remote::start::async() {
-    vpt::azbridge::remote::start >/dev/null 2>&1 &
+    VPT_AZBRIDGE_ASYNC=true \
+        vpt::azbridge::remote::start
 }

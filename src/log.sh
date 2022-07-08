@@ -1,6 +1,13 @@
 alias vpt-log-clear="vpt::log::clear"
 alias vpt-log-cat="vpt::log::cat"
 alias vpt-log-info="vpt::log::info"
+alias vpt-log-fit="vpt::log::fit"
+
+vpt::log::fit() {
+    while read -r; do
+        echo "${REPLY:0:$COLUMNS}"
+    done
+}
 
 vpt::log::clear() {
     if ! [[ -f "${VPT_LOG}" ]]; then
@@ -68,9 +75,4 @@ vpt::log::stream() {
     "$@" \
         1> >(vpt::log::stdout "stream" "${NAME}" ) \
         2> >(vpt::log::stderr "stream" "${NAME}" )
-}
-
-vpt::log::test() {
-    echo my-message
-    echo my-error 1>&2
 }
